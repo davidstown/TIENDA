@@ -1,0 +1,612 @@
+<html><head><base href="." name="viewport" content="width=device-width, initial-scale=1">
+<title>Sistema de Inventario - Hampton Inn</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Gelasio:wght@600&family=Roboto&display=swap');
+
+:root {
+    --cobalt: #275BAF;
+    --white: #FFFFFF;
+}
+
+body {
+    font-family: 'Roboto', sans-serif;
+    margin: 0;
+    padding: 20px;
+    background-color: #f5f5f5;
+}
+
+.header {
+    display: flex;
+    align-items: center;
+    background-color: var(--cobalt);
+    padding: 15px;
+    color: var(--white);
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+.header img {
+    height: 50px;
+    margin-right: 20px;
+}
+
+.header h1 {
+    font-family: 'Gelasio', serif;
+    margin: 0;
+    flex-grow: 1;
+    text-align: center;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.product-form {
+    background: var(--white);
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    margin-bottom: 20px;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+label {
+    display: block;
+    margin-bottom: 5px;
+    font-family: 'Gelasio', serif;
+    color: var(--cobalt);
+}
+
+input, textarea {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+textarea {
+    resize: vertical;
+    min-height: 60px;
+}
+
+button {
+    background-color: var(--cobalt);
+    color: var(--white);
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: 'Gelasio', serif;
+    transition: opacity 0.3s;
+}
+
+button:hover {
+    opacity: 0.9;
+}
+
+.inventory-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--white);
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.inventory-table th, .inventory-table td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+.inventory-table th {
+    background-color: var(--cobalt);
+    color: var(--white);
+    font-family: 'Gelasio', serif;
+}
+
+.delete-btn, .remove-btn {
+    padding: 6px 12px;
+    margin: 2px;
+}
+
+.delete-btn {
+    background-color: #dc3545;
+}
+
+.remove-btn {
+    background-color: #ffc107;
+    color: #000;
+}
+
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.5);
+    z-index: 1000;
+}
+
+.modal-content {
+    background-color: var(--white);
+    margin: 15% auto;
+    padding: 20px;
+    border-radius: 8px;
+    width: 80%;
+    max-width: 500px;
+}
+
+.close {
+    float: right;
+    cursor: pointer;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.close:hover {
+    color: var(--cobalt);
+}
+
+.alert {
+    padding: 10px;
+    margin-bottom: 15px;
+    border-radius: 4px;
+    display: none;
+}
+
+.alert-success {
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.alert-error {
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+.description-cell {
+    max-width: 200px;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+
+.profit-summary {
+    background: var(--white);
+    padding: 15px;
+    margin-bottom: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.reset-btn {
+    background-color: #dc3545;
+    margin-top: 10px;
+}
+
+.reset-btn:hover {
+    background-color: #c82333;
+}
+</style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <img src="https://hotelesprisma.com/wp-content/uploads/2022/07/Aimbridge_LATAM_K.png" alt="Aimbridge Logo">
+        <h1>Hampton Inn - Sistema de Inventario</h1>
+    </div>
+
+    <div class="alert alert-success" id="successAlert"></div>
+    <div class="alert alert-error" id="errorAlert"></div>
+
+    <div class="profit-summary">
+        <h3>Resumen de Ventas</h3>
+        <p>Ventas Totales: $<span id="totalSales">0.00</span></p>
+        <p>Costo Total: $<span id="totalCost">0.00</span></p>
+        <p>Ganancia Total: $<span id="totalProfit">0.00</span></p>
+        <button onclick="resetSales()" class="reset-btn">Reiniciar Ventas</button>
+    </div>
+
+    <div class="product-form">
+        <h2>Agregar Producto</h2>
+        <form id="productForm" onsubmit="submitProductForm(event)">
+            <div class="form-group">
+                <label for="productName">Nombre del Producto</label>
+                <input type="text" id="productName" required>
+            </div>
+            <div class="form-group">
+                <label for="productDescription">Descripción</label>
+                <textarea id="productDescription" required></textarea>
+            </div>
+            <div class="form-group">
+                <label for="productQuantity">Cantidad</label>
+                <input type="number" id="productQuantity" min="1" required>
+            </div>
+            <div class="form-group">
+                <label for="productPrice">Precio de Compra</label>
+                <input type="number" step="0.01" id="productPrice" required>
+            </div>
+            <div class="form-group">
+                <label for="salePrice">Precio de Venta</label>
+                <input type="number" step="0.01" id="salePrice" required>
+            </div>
+            <button type="submit">Agregar Producto</button>
+        </form>        
+    </div>
+
+    <div id="removalModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Razón de Baja</h2>
+            <div class="form-group">
+                <label for="removalReason">Seleccione la razón:</label>
+                <select id="removalReason" required>
+                    <option value="caducidad">Caducidad</option>
+                    <option value="perdida">Pérdida</option>
+                    <option value="robo">Robo</option>
+                    <option value="cortesia">Cortesía</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="removalQuantity">Cantidad a dar de baja:</label>
+                <input type="number" id="removalQuantity" min="1" value="1" required>
+            </div>
+            <button onclick="confirmRemoval()">Confirmar Baja</button>
+        </div>
+    </div>
+
+    <div id="saleModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeSaleModal()">&times;</span>
+            <h2>Venta de Producto</h2>
+            <div class="form-group">
+                <label for="saleQuantity">Cantidad a vender:</label>
+                <input type="number" id="saleQuantity" min="1" value="1" required>
+            </div>
+            <div class="form-group">
+                <label for="actualSalePrice">Precio de Venta:</label>
+                <input type="number" step="0.01" id="actualSalePrice" required>
+            </div>
+            <button onclick="confirmSale()">Confirmar Venta</button>
+        </div>
+    </div>
+
+    <table class="inventory-table">
+        <thead>
+            <tr>
+                <th>Producto</th>
+                <th>Descripción</th>
+                <th>Cantidad</th>
+                <th>Precios</th>
+                <th>Fecha de Alta</th>
+                <th>Última Venta</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody id="inventoryList"></tbody>
+    </table>
+</div>
+
+<script>
+let inventory = [];
+let salesHistory = {
+    totalSales: 0,
+    totalCost: 0,
+    totalProfit: 0,
+    transactions: []
+};
+
+try {
+    const savedInventory = localStorage.getItem('inventory');
+    const savedSalesHistory = localStorage.getItem('salesHistory');
+    
+    if (savedInventory) {
+        inventory = JSON.parse(savedInventory);
+        if (!Array.isArray(inventory)) {
+            inventory = [];
+        }
+    }
+    
+    if (savedSalesHistory) {
+        salesHistory = JSON.parse(savedSalesHistory);
+        if (typeof salesHistory !== 'object') {
+            salesHistory = {
+                totalSales: 0,
+                totalCost: 0,
+                totalProfit: 0,
+                transactions: []
+            };
+        }
+    }
+} catch (error) {
+    console.error('Error loading data from localStorage:', error);
+    inventory = [];
+    salesHistory = {
+        totalSales: 0,
+        totalCost: 0,
+        totalProfit: 0,
+        transactions: []
+    };
+}
+
+function formatDate(date) {
+    return new Date(date).toLocaleString('es-MX');
+}
+
+function showAlert(message, type) {
+    const alert = document.getElementById(type === 'success' ? 'successAlert' : 'errorAlert');
+    alert.textContent = message;
+    alert.style.display = 'block';
+    setTimeout(() => alert.style.display = 'none', 3000);
+}
+
+function saveAll() {
+    localStorage.setItem('inventory', JSON.stringify(inventory));
+    localStorage.setItem('salesHistory', JSON.stringify(salesHistory));
+}
+
+function renderInventory() {
+    const inventoryList = document.getElementById('inventoryList');
+    if (!inventoryList) {
+        console.error('Inventory list element not found');
+        return;
+    }
+    
+    inventoryList.innerHTML = '';
+    
+    if (!Array.isArray(inventory)) {
+        console.error('Inventory is not an array');
+        inventory = [];
+        saveAll();
+        return;
+    }
+    
+    inventory.forEach((item, index) => {
+        if (!item) {
+            console.error('Invalid item in inventory at index:', index);
+            return; // Skip this iteration
+        }
+        
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${item.name || 'N/A'}</td>
+            <td class="description-cell">${item.description || 'N/A'}</td>
+            <td>${item.quantity || 0}</td>
+            <td>Compra: $${(item.purchasePrice || 0).toFixed(2)}<br>Venta: $${(item.salePrice || 0).toFixed(2)}</td>
+            <td>${item.createdAt ? formatDate(item.createdAt) : 'N/A'}</td>
+            <td>${item.lastSold ? formatDate(item.lastSold) : 'N/A'}</td>
+            <td>
+                <button onclick="showSaleModal(${index})" class="delete-btn">Vender</button>
+                <button onclick="showRemovalModal(${index})" class="remove-btn">Dar de Baja</button>
+            </td>
+        `;
+        inventoryList.appendChild(row);
+    });
+}
+
+function addProduct(event) {
+    event.preventDefault();
+    
+    const name = document.getElementById('productName').value;
+    const description = document.getElementById('productDescription').value;
+    const quantity = parseInt(document.getElementById('productQuantity').value);
+    const purchasePrice = parseFloat(document.getElementById('productPrice').value);
+    const salePrice = parseFloat(document.getElementById('salePrice').value);
+    const createdAt = new Date().toISOString();
+
+    const existingProduct = inventory.find(item => item.name.toLowerCase() === name.toLowerCase());
+    
+    if (existingProduct) {
+        existingProduct.quantity += quantity;
+        showAlert('Cantidad actualizada exitosamente', 'success');
+    } else {
+        inventory.push({ 
+            name, 
+            description, 
+            quantity, 
+            purchasePrice,
+            salePrice,
+            createdAt,
+            lastSold: null
+        });
+        showAlert('Producto agregado exitosamente', 'success');
+    }
+
+    saveAll();
+    renderInventory();
+    event.target.reset();
+}
+
+function showSaleModal(index) {
+    selectedItemIndex = index;
+    const modal = document.getElementById('saleModal');
+    const quantityInput = document.getElementById('saleQuantity');
+    const salePriceInput = document.getElementById('actualSalePrice');
+    
+    if (inventory[index]) {
+        quantityInput.max = inventory[index].quantity;
+        quantityInput.value = 1;
+        salePriceInput.value = inventory[index].salePrice;
+    }
+    modal.style.display = 'block';
+}
+
+function confirmSale() {
+    if (selectedItemIndex === null) return;
+    
+    const quantity = parseInt(document.getElementById('saleQuantity').value);
+    const actualSalePrice = parseFloat(document.getElementById('actualSalePrice').value);
+    const item = inventory[selectedItemIndex];
+    
+    if (quantity > item.quantity) {
+        showAlert('La cantidad a vender no puede ser mayor que la existente', 'error');
+        return;
+    }
+
+    const saleTotal = quantity * actualSalePrice;
+    const costTotal = quantity * item.purchasePrice;
+    const profit = saleTotal - costTotal;
+
+    salesHistory.totalSales += saleTotal;
+    salesHistory.totalCost += costTotal;
+    salesHistory.totalProfit += profit;
+    
+    salesHistory.transactions.push({
+        productName: item.name,
+        quantity: quantity,
+        salePrice: actualSalePrice,
+        purchasePrice: item.purchasePrice,
+        profit: profit,
+        date: new Date().toISOString()
+    });
+
+    if (item.quantity > quantity) {
+        item.quantity -= quantity;
+        item.lastSold = new Date().toISOString();
+    } else {
+        inventory.splice(selectedItemIndex, 1);
+    }
+
+    saveAll();
+    updateProfitDisplay();
+    renderInventory();
+    closeSaleModal();
+    showAlert(`Venta realizada. Ganancia: $${profit.toFixed(2)}`, 'success');
+}
+
+function closeSaleModal() {
+    const modal = document.getElementById('saleModal');
+    modal.style.display = 'none';
+    selectedItemIndex = null;
+}
+
+function showRemovalModal(index) {
+    selectedItemIndex = index;
+    const modal = document.getElementById('removalModal');
+    const quantityInput = document.getElementById('removalQuantity');
+    
+    if (inventory[index]) {
+        quantityInput.max = inventory[index].quantity;
+        quantityInput.value = 1;
+    }
+    modal.style.display = 'block';
+}
+
+function closeModal() {
+    const modal = document.getElementById('removalModal');
+    modal.style.display = 'none';
+    selectedItemIndex = null;
+}
+
+function confirmRemoval() {
+    if (selectedItemIndex === null) return;
+    
+    const quantity = parseInt(document.getElementById('removalQuantity').value);
+    const reason = document.getElementById('removalReason').value;
+    const item = inventory[selectedItemIndex];
+    
+    if (quantity > item.quantity) {
+        showAlert('La cantidad a dar de baja no puede ser mayor que la existente', 'error');
+        return;
+    }
+
+    if (item.quantity > quantity) {
+        item.quantity -= quantity;
+    } else {
+        inventory.splice(selectedItemIndex, 1);
+    }
+
+    saveAll();
+    renderInventory();
+    closeModal();
+    showAlert(`Producto dado de baja por ${reason}`, 'success');
+}
+
+function updateProfitDisplay() {
+    document.getElementById('totalSales').textContent = salesHistory.totalSales.toFixed(2);
+    document.getElementById('totalCost').textContent = salesHistory.totalCost.toFixed(2);
+    document.getElementById('totalProfit').textContent = salesHistory.totalProfit.toFixed(2);
+}
+
+function resetSales() {
+    if (confirm('¿Está seguro que desea reiniciar el historial de ventas? Esta acción no se puede deshacer.')) {
+        salesHistory = {
+            totalSales: 0,
+            totalCost: 0,
+            totalProfit: 0,
+            transactions: []
+        };
+        saveAll();
+        updateProfitDisplay();
+        showAlert('Historial de ventas reiniciado exitosamente', 'success');
+    }
+}
+
+// Event Listeners
+document.getElementById('productForm').addEventListener('submit', addProduct);
+document.querySelector('.close').addEventListener('click', closeModal);
+window.addEventListener('click', (event) => {
+    const removalModal = document.getElementById('removalModal');
+    const saleModal = document.getElementById('saleModal');
+    if (event.target === removalModal) {
+        closeModal();
+    }
+    if (event.target === saleModal) {
+        closeSaleModal();
+    }
+});
+
+window.addEventListener('load', () => {
+    updateProfitDisplay();
+    renderInventory();
+});
+
+renderInventory();
+</script>
+<script>
+   const scriptURL = 'https://script.google.com/macros/s/AKfycbxjcJmQJEX299Ol6RuyQnlpXdtmZNmdvkyFAAzfw8muGgpsk1ZhFkpXnTfTvrvB6cTjkA/exec';  // Asegúrate de que esta URL sea correcta
+
+   async function submitProductForm(event) {
+    event.preventDefault();  // Evita que el formulario se envíe de la manera tradicional
+
+    // Captura los datos del formulario
+    const formData = {
+        productName: document.getElementById('productName').value,
+        productDescription: document.getElementById('productDescription').value,
+        productQuantity: document.getElementById('productQuantity').value,
+        productPrice: document.getElementById('productPrice').value,
+        salePrice: document.getElementById('salePrice').value
+    };
+
+    console.log(formData);  // Verifica si los datos del formulario están siendo capturados correctamente.
+
+    try {
+        // Enviar los datos como JSON
+        const response = await fetch(scriptURL, {
+            method: 'POST',
+            body: JSON.stringify(formData),  // Convierte los datos a JSON
+            headers: { 'Content-Type': 'application/json' }  // Asegúrate de que el tipo de contenido sea JSON
+        });
+
+        const result = await response.json();  // Parseamos la respuesta de la API
+        console.log(result);  // Opcional: para depuración
+        alert('Producto agregado con éxito');
+    } catch (error) {
+        console.error('Error al enviar el formulario:', error);
+        alert('Hubo un error al agregar el producto');
+    }
+}
+
+</script>
+
+</body>
+</html>
