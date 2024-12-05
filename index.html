@@ -573,10 +573,10 @@ window.addEventListener('load', () => {
 renderInventory();
 </script>
 <script>
-   const scriptURL = 'https://script.google.com/macros/s/AKfycbzwxl9ZgiumsRbTW2oXvn2Lzg1sOLXw2UAnii3H2BOglLl0D2dww9q5IFccVyfS9HYJ/exec';  // Asegúrate de que esta URL sea correcta
+const scriptURL = 'https://script.google.com/macros/s/AKfycbzwxl9ZgiumsRbTW2oXvn2Lzg1sOLXw2UAnii3H2BOglLl0D2dww9q5IFccVyfS9HYJ/exec';  // Confirma que esta URL es correcta
 
-   async function submitProductForm(event) {
-    event.preventDefault();  // Evita que el formulario se envíe de la manera tradicional
+async function submitProductForm(event) {
+    event.preventDefault();  // Evita el envío del formulario por defecto
 
     // Captura los datos del formulario
     const formData = {
@@ -587,26 +587,31 @@ renderInventory();
         salePrice: document.getElementById('salePrice').value
     };
 
-    console.log(formData);  // Verifica si los datos del formulario están siendo capturados correctamente.
+    console.log('Datos enviados:', formData);  // Para verificar en la consola
 
     try {
         // Enviar los datos como JSON
         const response = await fetch(scriptURL, {
             method: 'POST',
-            body: JSON.stringify(formData),  // Convierte los datos a JSON
-            headers: { 'Content-Type': 'application/json' }  // Asegúrate de que el tipo de contenido sea JSON
+            body: JSON.stringify(formData),  // Convierte el objeto formData a JSON
+            headers: { 'Content-Type': 'application/json' }  // Define el tipo de contenido
         });
 
-        const result = await response.json();  // Parseamos la respuesta de la API
-        console.log(result);  // Opcional: para depuración
-        alert('Producto agregado con éxito');
+        // Verifica la respuesta
+        if (response.ok) {
+            const result = await response.json();
+            console.log('Respuesta del servidor:', result);  // Opcional: depuración
+            showAlert('Producto agregado exitosamente', 'success');
+        } else {
+            throw new Error('Error en la respuesta del servidor');
+        }
     } catch (error) {
         console.error('Error al enviar el formulario:', error);
-        alert('Hubo un error al agregar el producto');
+        showAlert('Hubo un error al agregar el producto', 'error');
     }
 }
-
 </script>
+
 
 </body>
 </html>
